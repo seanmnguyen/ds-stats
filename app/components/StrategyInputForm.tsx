@@ -1,7 +1,9 @@
 "use client";
 
 import { Tables } from "@/database/database.types";
-import { ChangeEvent, useState } from "react";
+import { postgrestErrorToHttpStatus } from "@/database/utils";
+import { createUserLevelClient } from "@/lib/supabase/client";
+import { ChangeEvent, useEffect, useState } from "react";
 
 type Commander = Tables<"commanders">;
 
@@ -16,39 +18,75 @@ interface StrategyInputFormProps {
   opponent?: Commander;
 }
 
-function createBlankStrategyForm() {
-  return {
-    title: "",
-    body: "",
-    opponent: "",
-  };
-}
-
 export default function StrategyInputForm({
   player,
   opponent,
 }: StrategyInputFormProps) {
+  const [commanderOptions, setComamnderOptions] = useState<Commander[]>([]);
   const [strategyForm, setStrategyForm] = useState<StrategyFormState>(
     createBlankStrategyForm()
   );
 
+  function createBlankStrategyForm() {
+    return {
+      title: "",
+      body: "",
+      opponent: opponent?.slug ?? "",
+    };
+  }
+
+  useEffect(() => {
+    const supabase = createUserLevelClient();
+
+    (async () => {
+      const { data, error } = await supabase
+        .from("commanders")
+        .select("*")
+        .order("slug", { ascending: true });
+
+      if (data) {
+        setComamnderOptions(data);
+      } else {
+        console.error(postgrestErrorToHttpStatus(error));
+      }
+    })();
+  }, []);
+
   function handleFormChange(field: keyof StrategyFormState) {
-    return (event: ChangeEvent<HTMLInputElement>) => {
+    return (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setStrategyForm((currentForm) => ({
         ...currentForm,
         [field]: event.target.value,
       }));
     };
   }
+
+  async function handleStrategySubmit(event: React.SubmitEvent) {
+    event.preventDefault();
+
+    const supabase = createUserLevelClient();
+  }
+
   return (
-    <form>
-      <div>
+    <form className="m-4" onSubmit={handleStrategySubmit}>
+      <div className="flex flex-row">
         <p>{player.display_name}</p>
-        {" vs "}
-        <p>{opponent?.display_name}</p>
+        <p className="mx-1"> vs </p>
+        <select
+          value={strategyForm.opponent ?? "defaultSelect"}
+          onChange={(e) => handleFormChange("opponent")(e)}
+          required
+        >
+          <option value="defaultSelect">Select Opponent</option>
+          {commanderOptions.map((c: Commander) => (
+            <option key={c.slug} value={c.slug}>
+              {c.display_name}
+            </option>
+          ))}
+        </select>
       </div>
       <div>
-        <label htmlFor="title">
+        <label htmlFor="title" className="mr-1">
           Title <em>(optional)</em>
         </label>
         <input
@@ -60,15 +98,19 @@ export default function StrategyInputForm({
         />
       </div>
       <div>
-        <label htmlFor="body">Strategy</label>
+        <label htmlFor="body" className="mr-1">
+          Strategy
+        </label>
         <input
           id="body"
           type="text"
           value={strategyForm.body}
           placeholder="Your genius plan..."
           onChange={handleFormChange("body")}
+          required
         />
       </div>
+      <button type="submit">Submit</button>
     </form>
   );
 }

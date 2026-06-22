@@ -28,6 +28,12 @@ export default function CommanderStatsView({
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [isAddingStrategy, setIsAddingStrategy] = useState<boolean>(false);
 
+  function handleAddStrategy() {
+    if (commander) {
+      setIsAddingStrategy(!isAddingStrategy);
+    }
+  }
+
   function fetchAllStrategies(player: Commander): Promise<Strategy[]> {
     const supabase = createUserLevelClient();
     return (async () => {
@@ -35,8 +41,6 @@ export default function CommanderStatsView({
         .from("strategies")
         .select("*")
         .eq("player", player.slug);
-
-      console.log("STRATEGIES:", data);
 
       return data ? data : [];
     })();
@@ -151,7 +155,7 @@ export default function CommanderStatsView({
           <h4 className="text-2xl">Strategies</h4>
           <button
             className="rounded-full pl-10 pr-10 hover:bg-mist-400 bg-mist-300 cursor-pointer"
-            onClick={() => setIsAddingStrategy(!isAddingStrategy)}
+            onClick={handleAddStrategy}
           >
             {isAddingStrategy ? "Cancel" : "+"}
           </button>
@@ -160,12 +164,12 @@ export default function CommanderStatsView({
           {isAddingStrategy && commander ? (
             <StrategyInputForm
               player={commander}
-              opponent={opponent ? opponent : undefined}
+              opponent={opponent ?? undefined}
             ></StrategyInputForm>
           ) : (
             ""
           )}
-          {strategies.map((strat) => (
+          {strategies.map((strat: Strategy) => (
             <StrategyRow key={strat.id} strategy={strat}></StrategyRow>
           ))}
         </div>
