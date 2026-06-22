@@ -40,7 +40,7 @@ export default function Home() {
             <CommanderStatsView
               commander={rightCommander}
               opponent={leftCommander}
-              direction="reverse"
+              reversed={true}
             ></CommanderStatsView>
           </div>
         </div>

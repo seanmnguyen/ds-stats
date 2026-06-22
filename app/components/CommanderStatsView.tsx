@@ -12,7 +12,7 @@ type Strategy = Tables<"strategies">;
 interface CommanderStatsViewProps {
   commander: Commander | null;
   opponent?: Commander | null;
-  direction?: string;
+  reversed?: boolean;
 }
 
 const PORTRAIT_DIAMETER: number = 300;
@@ -20,6 +20,7 @@ const PORTRAIT_DIAMETER: number = 300;
 export default function CommanderStatsView({
   commander,
   opponent,
+  reversed,
 }: CommanderStatsViewProps) {
   const [wins, setWins] = useState<number>(0);
   const [losses, setLosses] = useState<number>(0);
@@ -111,20 +112,29 @@ export default function CommanderStatsView({
   }, [commander, opponent]);
 
   return (
-    <div className="border w-80/100">
+    <div className="border w-4/5">
       <h3 className="flex justify-center text-3xl">
         {commander?.display_name ?? "Select a Commander"}
       </h3>
-      <div className="flex flex-row m-5 justify-between">
+      <div
+        className={`flex flex-row m-5 ${
+          reversed ? "flex-row-reverse" : "flex-row"
+        }`}
+      >
         <Image
           key={commander?.slug ?? "empty"}
           src={commander?.portrait_url ?? "/portraits/blank"}
           width={PORTRAIT_DIAMETER}
           height={PORTRAIT_DIAMETER}
           alt={`Portrait of ${commander?.display_name ?? "commander"}`}
-          className=""
+          className="flex flex-1/2"
         />
-        <div className="flex flex-col justify-around text-xl">
+        <div
+          className={`flex flex-1/2 flex-col justify-around text-xl border ${
+            reversed ? "mr-15 text-right" : "ml-15 text-left"
+          }`}
+        >
+          <p className="underline">Match Up Stats</p>
           <p>{`Wins: ${commander ? wins : "N/A"}`}</p>
           <p>{`Losses: ${commander ? losses : "N/A"}`}</p>
           <p>{`Rate: ${
@@ -134,7 +144,7 @@ export default function CommanderStatsView({
           }`}</p>
         </div>
       </div>
-      <div className="border">
+      <div className="m-5 border">
         <div className="flex flex-row justify-between m-2">
           <h4 className="text-2xl">Strategies</h4>
           <button className="rounded-full pl-10 pr-10 hover:bg-mist-400 bg-mist-300 cursor-pointer">

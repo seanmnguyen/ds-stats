@@ -33,7 +33,7 @@ export default function CommanderSelection({
   }, []);
 
   return (
-    <div className="h-full w-fit flex flex-col justify-start overflow-y-auto">
+    <div className="flex flex-col ml-5 mr-5 h-full w-fit justify-start overflow-y-auto">
       <button
         onClick={() => onClick(null)}
         className="rounded-full mt-2 bg-mist-300 hover:bg-mist-400 cursor-pointer"
