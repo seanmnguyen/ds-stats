@@ -28,12 +28,6 @@ export default function CommanderStatsView({
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [isAddingStrategy, setIsAddingStrategy] = useState<boolean>(false);
 
-  function handleAddStrategy() {
-    if (commander) {
-      setIsAddingStrategy(!isAddingStrategy);
-    }
-  }
-
   function fetchAllStrategies(player: Commander): Promise<Strategy[]> {
     const supabase = createUserLevelClient();
     return (async () => {
@@ -155,9 +149,9 @@ export default function CommanderStatsView({
           <h4 className="text-2xl">Strategies</h4>
           <button
             className="rounded-full pl-10 pr-10 hover:bg-mist-400 bg-mist-300 cursor-pointer"
-            onClick={handleAddStrategy}
+            onClick={() => setIsAddingStrategy(true)}
           >
-            {isAddingStrategy ? "Cancel" : "+"}
+            +
           </button>
         </div>
         <div className="border m-2">
@@ -165,6 +159,7 @@ export default function CommanderStatsView({
             <StrategyInputForm
               player={commander}
               opponent={opponent ?? undefined}
+              handleCancel={() => setIsAddingStrategy(false)}
             ></StrategyInputForm>
           ) : (
             ""

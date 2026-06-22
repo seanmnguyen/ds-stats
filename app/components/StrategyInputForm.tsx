@@ -16,11 +16,13 @@ type StrategyFormState = {
 interface StrategyInputFormProps {
   player: Commander;
   opponent?: Commander;
+  handleCancel: () => void;
 }
 
 export default function StrategyInputForm({
   player,
   opponent,
+  handleCancel,
 }: StrategyInputFormProps) {
   const [commanderOptions, setComamnderOptions] = useState<Commander[]>([]);
   const [strategyForm, setStrategyForm] = useState<StrategyFormState>(
@@ -120,6 +122,13 @@ export default function StrategyInputForm({
           className="w-full pl-1"
           required
         />
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="rounded-full px-3 ml-2 hover:bg-mist-400 bg-mist-300 cursor-pointer"
+        >
+          Cancel
+        </button>
       </div>
     </form>
   );
