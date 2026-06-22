@@ -5,6 +5,7 @@ import { createUserLevelClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import StrategyRow from "./StrategyRow";
+import StrategyInputForm from "./StrategyInputForm";
 
 type Commander = Tables<"commanders">;
 type Strategy = Tables<"strategies">;
@@ -25,6 +26,7 @@ export default function CommanderStatsView({
   const [wins, setWins] = useState<number>(0);
   const [losses, setLosses] = useState<number>(0);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [isAddingStrategy, setIsAddingStrategy] = useState<boolean>(false);
 
   function fetchAllStrategies(player: Commander): Promise<Strategy[]> {
     const supabase = createUserLevelClient();
@@ -147,11 +149,22 @@ export default function CommanderStatsView({
       <div className="m-5 border">
         <div className="flex flex-row justify-between m-2">
           <h4 className="text-2xl">Strategies</h4>
-          <button className="rounded-full pl-10 pr-10 hover:bg-mist-400 bg-mist-300 cursor-pointer">
-            +
+          <button
+            className="rounded-full pl-10 pr-10 hover:bg-mist-400 bg-mist-300 cursor-pointer"
+            onClick={() => setIsAddingStrategy(!isAddingStrategy)}
+          >
+            {isAddingStrategy ? "Cancel" : "+"}
           </button>
         </div>
         <div className="border m-2">
+          {isAddingStrategy && commander ? (
+            <StrategyInputForm
+              player={commander}
+              opponent={opponent ? opponent : undefined}
+            ></StrategyInputForm>
+          ) : (
+            ""
+          )}
           {strategies.map((strat) => (
             <StrategyRow key={strat.id} strategy={strat}></StrategyRow>
           ))}
