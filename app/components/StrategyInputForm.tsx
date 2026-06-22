@@ -53,7 +53,11 @@ export default function StrategyInputForm({
   }, []);
 
   function handleFormChange(field: keyof StrategyFormState) {
-    return (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    return (
+      event: ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
       setStrategyForm((currentForm) => ({
         ...currentForm,
         [field]: event.target.value,
@@ -65,19 +69,21 @@ export default function StrategyInputForm({
     event.preventDefault();
 
     const supabase = createUserLevelClient();
+
+    console.log("FORM DATA", strategyForm);
   }
 
   return (
     <form className="m-4" onSubmit={handleStrategySubmit}>
-      <div className="flex flex-row">
+      <div className="flex flex-row text-center justify-center font-bold">
         <p>{player.display_name}</p>
-        <p className="mx-1"> vs </p>
+        <p className="mx-2"> vs </p>
         <select
           value={strategyForm.opponent ?? "defaultSelect"}
           onChange={(e) => handleFormChange("opponent")(e)}
           required
         >
-          <option value="defaultSelect">Select Opponent</option>
+          <option value="defaultSelect">Opponent</option>
           {commanderOptions.map((c: Commander) => (
             <option key={c.slug} value={c.slug}>
               {c.display_name}
@@ -85,32 +91,36 @@ export default function StrategyInputForm({
           ))}
         </select>
       </div>
-      <div>
-        <label htmlFor="title" className="mr-1">
-          Title <em>(optional)</em>
+      <div className="grid grid-cols-[auto_1fr_auto] gap-x-2 gap-y-2 items-center">
+        <label htmlFor="title" className="mr-1 text-right">
+          Title:
         </label>
         <input
           id="title"
           type="text"
           value={strategyForm.title}
-          placeholder="Name your strategy!"
+          placeholder="(Optional) Name your strategy!"
           onChange={handleFormChange("title")}
+          className="w-full pl-1"
         />
-      </div>
-      <div>
-        <label htmlFor="body" className="mr-1">
-          Strategy
+        <button
+          type="submit"
+          className="rounded-full px-3 ml-2 hover:bg-mist-400 bg-mist-300 cursor-pointer"
+        >
+          Submit
+        </button>
+        <label htmlFor="body" className="mr-1 text-right self-start">
+          Strategy:
         </label>
-        <input
+        <textarea
           id="body"
-          type="text"
           value={strategyForm.body}
           placeholder="Your genius plan..."
           onChange={handleFormChange("body")}
+          className="w-full pl-1"
           required
         />
       </div>
-      <button type="submit">Submit</button>
     </form>
   );
 }
