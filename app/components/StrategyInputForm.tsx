@@ -71,8 +71,6 @@ export default function StrategyInputForm({
     event.preventDefault();
 
     const supabase = createUserLevelClient();
-
-    console.log("FORM DATA", strategyForm);
   }
 
   return (

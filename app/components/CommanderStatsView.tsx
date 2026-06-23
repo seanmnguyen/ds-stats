@@ -52,8 +52,6 @@ export default function CommanderStatsView({
         .eq("player", player.slug)
         .eq("opponent", opponent.slug);
 
-      console.log("STRATEGIES:", data);
-
       return data ? data : [];
     })();
   }
