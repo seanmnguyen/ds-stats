@@ -67,8 +67,6 @@ export default function CommanderStatsView({
           .select("opponent, wins, losses")
           .eq("player", commander.slug);
 
-        console.log("DATA", data);
-
         if (data) {
           if (opponent === null || opponent === undefined) {
             // No opponent -> get all stats and strategies
@@ -148,10 +146,15 @@ export default function CommanderStatsView({
         <div className="flex flex-row justify-between m-2">
           <h4 className="text-2xl">Strategies</h4>
           <button
-            className="rounded-full pl-10 pr-10 hover:bg-mist-400 bg-mist-300 cursor-pointer"
-            onClick={() => setIsAddingStrategy(true)}
+            className={`rounded-full pl-10 pr-10  ${
+              isAddingStrategy
+                ? "cursor-not-allowed bg-mist-300"
+                : "cursor-pointer bg-mist-400 hover:bg-mist-300"
+            }`}
+            onClick={() => (commander ? setIsAddingStrategy(true) : {})}
+            disabled={isAddingStrategy}
           >
-            +
+            Add
           </button>
         </div>
         <div className="border m-2">
