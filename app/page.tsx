@@ -22,7 +22,6 @@ export default function Home() {
   return (
     <div>
       <main>
-        <h1>Direct Strike Stats</h1>
         <div className="flex flex-row w-dvw justify-between">
           <div className="flex flex-1/2 flex-row h-dvh max-h-dvh bg-white text-black">
             <CommanderSelection

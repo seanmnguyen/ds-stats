@@ -1,17 +1,30 @@
-import type { ComponentProps } from "react";
+"use client";
+import { useState } from "react";
+import { createUserLevelClient } from "@/lib/supabase/client";
 
 const baseClasses =
-  "group relative h-10 max-w-[400px] min-w-min cursor-pointer appearance-none select-none overflow-hidden whitespace-nowrap rounded-[20px] border border-[#747775] bg-white px-3 py-0 align-middle text-center text-sm tracking-[0.25px] text-[#1f1f1f] outline-none transition duration-[218ms] enabled:hover:shadow-[0_1px_2px_0_rgba(60,64,67,0.3),0_1px_3px_1px_rgba(60,64,67,0.15)] disabled:cursor-default disabled:border-[#1f1f1f1f] disabled:bg-[#ffffff61]";
+  "group relative h-10 max-w-[400px] min-w-min my-3 mr-2 cursor-pointer appearance-none select-none overflow-hidden whitespace-nowrap rounded-[20px] border border-[#747775] bg-white px-3 py-0 align-middle text-center text-sm tracking-[0.25px] text-[#1f1f1f] outline-none transition duration-[218ms] enabled:hover:shadow-[0_1px_2px_0_rgba(60,64,67,0.3),0_1px_3px_1px_rgba(60,64,67,0.15)] disabled:cursor-default disabled:border-[#1f1f1f1f] disabled:bg-[#ffffff61]";
 
-type SignInWithGoogleButtonProps = ComponentProps<"button">;
+export default function SignInWithGoogleButton() {
+  const [pending, setPending] = useState(false);
 
-export default function SignInWithGoogleButton({
-  type = "button",
-  className = "",
-  ...props
-}: SignInWithGoogleButtonProps) {
+  async function handleSignIn() {
+    setPending(true);
+    const supabase = createUserLevelClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${location.origin}/auth/callback` },
+    });
+    if (error) setPending(false); // on success, the browser redirects away
+  }
+
   return (
-    <button type={type} className={`${baseClasses} ${className}`} {...props}>
+    <button
+      type="button"
+      onClick={handleSignIn}
+      disabled={pending}
+      className={baseClasses}
+    >
       {/* Material "ink" overlay — tints on hover/active/focus, hidden when disabled */}
       <span className="pointer-events-none absolute inset-0 bg-[#303030] opacity-0 transition-opacity duration-[218ms] group-hover:opacity-[0.08] group-focus:opacity-[0.12] group-active:opacity-[0.12] group-disabled:opacity-0!" />
       <span className="relative flex h-full w-full flex-row flex-nowrap items-center justify-between">
@@ -41,7 +54,7 @@ export default function SignInWithGoogleButton({
           </svg>
         </span>
         <span className="grow overflow-hidden text-ellipsis font-medium group-disabled:opacity-[0.38]">
-          Sign in with Google
+          Sign In
         </span>
       </span>
     </button>
