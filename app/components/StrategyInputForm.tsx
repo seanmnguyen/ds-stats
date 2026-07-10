@@ -74,14 +74,20 @@ export default function StrategyInputForm({
   }
 
   return (
-    <form className="m-4" onSubmit={handleStrategySubmit}>
-      <div className="flex flex-row text-center justify-center font-bold">
-        <p>{player.display_name}</p>
-        <p className="mx-2"> vs </p>
+    <form
+      className="panel-inset flex flex-col gap-3 border-accent-deep p-4"
+      onSubmit={handleStrategySubmit}
+    >
+      <div className="flex flex-row items-center justify-center gap-2 text-center">
+        <p className="font-display font-semibold uppercase tracking-wide">
+          {player.display_name}
+        </p>
+        <p className="font-display uppercase text-faint">vs</p>
         <select
           value={strategyForm.opponent ?? "defaultSelect"}
           onChange={(e) => handleFormChange("opponent")(e)}
           required
+          className="field w-auto py-1"
         >
           <option value="defaultSelect">Opponent</option>
           {commanderOptions.map((c: Commander) => (
@@ -91,9 +97,12 @@ export default function StrategyInputForm({
           ))}
         </select>
       </div>
-      <div className="grid grid-cols-[auto_1fr_auto] gap-x-2 gap-y-2 items-center">
-        <label htmlFor="title" className="mr-1 text-right">
-          Title:
+      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3">
+        <label
+          htmlFor="title"
+          className="text-right text-xs font-semibold uppercase tracking-wider text-muted"
+        >
+          Title
         </label>
         <input
           id="title"
@@ -101,29 +110,30 @@ export default function StrategyInputForm({
           value={strategyForm.title}
           placeholder="(Optional) Name your strategy!"
           onChange={handleFormChange("title")}
-          className="w-full pl-1"
+          className="field"
         />
-        <button
-          type="submit"
-          className="rounded-full px-3 ml-2 hover:bg-mist-400 bg-mist-300 cursor-pointer"
-        >
+        <button type="submit" className="btn btn-primary">
           Submit
         </button>
-        <label htmlFor="body" className="mr-1 text-right self-start">
-          Strategy:
+        <label
+          htmlFor="body"
+          className="self-start pt-2 text-right text-xs font-semibold uppercase tracking-wider text-muted"
+        >
+          Strategy
         </label>
         <textarea
           id="body"
+          rows={3}
           value={strategyForm.body}
           placeholder="Your genius plan..."
           onChange={handleFormChange("body")}
-          className="w-full pl-1"
+          className="field resize-y"
           required
         />
         <button
           type="button"
           onClick={handleCancel}
-          className="rounded-full px-3 ml-2 hover:bg-mist-400 bg-mist-300 cursor-pointer"
+          className="btn btn-ghost self-start"
         >
           Cancel
         </button>

@@ -80,45 +80,77 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
   }
 
   return (
-    <div className="m-4">
-      <div className="flex flex-row justify-between">
-        <div className="flex flex-1/2 flex-row">
-          <p className="">
+    <div className="panel-inset flex flex-row gap-3 p-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex flex-row flex-wrap items-baseline justify-between gap-x-3">
+          <p className="min-w-0">
             <strong
-              className={`underline ${
+              className={`font-semibold ${
                 strategy?.title === null || strategy?.title === ""
-                  ? "italic"
+                  ? "italic text-faint"
                   : ""
               }`}
             >
               {strategy?.title ?? "Untitled"}
             </strong>{" "}
-            {author !== "" ? <em>{`- ${author}`}</em> : ""}
+            {author !== "" ? (
+              <em className="text-sm text-muted">{`- ${author}`}</em>
+            ) : (
+              ""
+            )}
           </p>
           {/* <p>Author: {strategy?.author}</p> */}
-        </div>
-        <div className="flex flex-1/2 flex-col overflow-x-auto">
           {/* <p className="italic text-right">
             Created: {formatDate(strategy?.created_at)}
           </p> */}
-          <p className="italic text-right whitespace-nowrap">
+          <p className="whitespace-nowrap text-xs italic text-faint">
             Last Modified: {formatDate(strategy?.last_edit)}
           </p>
         </div>
-      </div>
-      <div className="flex flex-row">
-        <p className="flex-9/10 bg-red-50 max-h-12   overflow-y-auto">
+        <p className="max-h-24 overflow-y-auto pr-1 text-sm leading-relaxed text-muted">
           {strategy?.body}
         </p>
-        <div className="flex flex-1/10 flex-row justify-between ml-1">
-          <button className="m-auto cursor-pointer" onClick={() => vote(true)}>
-            ⬆️
-          </button>
-          <p className="mx-1 my-auto text-center align-middle">{rating}</p>
-          <button className="m-auto cursor-pointer" onClick={() => vote(false)}>
-            ⬇️
-          </button>
-        </div>
+      </div>
+      <div className="flex shrink-0 flex-col items-center justify-center">
+        <button
+          aria-label="Upvote"
+          className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-surface-raised hover:text-win"
+          onClick={() => vote(true)}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 10l5-5 5 5" />
+          </svg>
+        </button>
+        <p className="min-w-6 text-center font-display text-sm font-bold tabular-nums">
+          {rating}
+        </p>
+        <button
+          aria-label="Downvote"
+          className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-surface-raised hover:text-loss"
+          onClick={() => vote(false)}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M3 6l5 5 5-5" />
+          </svg>
+        </button>
       </div>
     </div>
   );
