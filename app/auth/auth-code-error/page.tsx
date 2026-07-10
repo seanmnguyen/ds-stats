@@ -12,25 +12,24 @@ export default function AuthCodeErrorPage() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
       <div className="flex max-w-prose flex-col gap-4">
-        <h1 className="text-2xl font-bold">Sign-in was not completed</h1>
+        <h1 className="font-display text-2xl font-bold uppercase tracking-wide">
+          Sign-in was not completed
+        </h1>
 
-        <p className="text-sm opacity-80">
+        <p className="text-sm text-muted">
           We were unable to finish signing you in. This usually means the
           sign-in link expired, or the Google account you used is not on the
           access list for this invite-only app.
         </p>
 
-        <p className="text-sm opacity-80">
+        <p className="text-sm text-muted">
           Please try signing in again. If it keeps failing, make sure you are
           using an invited Google account, or contact the site admin to be
           added.
         </p>
       </div>
 
-      <Link
-        href="/"
-        className="rounded-full border border-[#747775] px-4 py-2 text-sm font-medium transition duration-[218ms] hover:bg-black/5 dark:hover:bg-white/10"
-      >
+      <Link href="/" className="btn btn-ghost rounded-full px-5">
         Return home
       </Link>
     </main>
