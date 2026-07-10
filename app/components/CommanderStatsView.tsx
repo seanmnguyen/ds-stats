@@ -16,7 +16,7 @@ interface CommanderStatsViewProps {
   reversed?: boolean;
 }
 
-const PORTRAIT_DIAMETER: number = 300;
+const PORTRAIT_SIZE: number = 300;
 
 export default function CommanderStatsView({
   commander,
@@ -107,55 +107,116 @@ export default function CommanderStatsView({
     }
   }, [commander, opponent]);
 
+  // Guard against divide-by-zero when a commander has no recorded games
+  const totalGames = wins + losses;
+  const winRate =
+    commander && totalGames > 0 ? (wins / totalGames) * 100 : null;
+
   return (
-    <div className="border w-4/5">
-      <h3 className="flex justify-center text-3xl">
+    <div className="panel flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+      <h3
+        className={`border-b border-border pb-3 text-center font-display text-2xl font-bold uppercase tracking-wide ${
+          commander ? "" : "text-faint"
+        }`}
+      >
         {commander?.display_name ?? "Select a Commander"}
       </h3>
+
       <div
-        className={`flex flex-row m-5 ${
+        className={`flex items-center gap-6 ${
           reversed ? "flex-row-reverse" : "flex-row"
         }`}
       >
-        <Image
-          key={commander?.slug ?? "empty"}
-          src={commander?.portrait_url ?? "/portraits/blank"}
-          width={PORTRAIT_DIAMETER}
-          height={PORTRAIT_DIAMETER}
-          alt={`Portrait of ${commander?.display_name ?? "commander"}`}
-          className="flex flex-1/2"
-        />
+        {commander?.portrait_url ? (
+          <Image
+            key={commander.slug}
+            src={commander.portrait_url}
+            width={PORTRAIT_SIZE}
+            height={PORTRAIT_SIZE}
+            alt={`Portrait of ${commander.display_name}`}
+            className="w-2/5 max-w-[300px] rounded-2xl ring-1 ring-border"
+          />
+        ) : (
+          <div className="flex aspect-square w-2/5 max-w-[300px] items-center justify-center rounded-2xl border border-dashed border-border-strong bg-surface-inset">
+            <span className="font-display text-5xl font-bold text-faint">
+              ?
+            </span>
+          </div>
+        )}
+
         <div
-          className={`flex flex-1/2 flex-col justify-around text-xl border ${
-            reversed ? "mr-15 text-right" : "ml-15 text-left"
+          className={`flex flex-1 flex-col gap-2 ${
+            reversed ? "items-end text-right" : "items-start text-left"
           }`}
         >
-          <p className="underline">Match Up Stats</p>
-          <p>{`Wins: ${commander ? wins : "N/A"}`}</p>
-          <p>{`Losses: ${commander ? losses : "N/A"}`}</p>
-          <p>{`Rate: ${
-            commander
-              ? ((wins / (wins + losses)) * 100).toFixed(2) + "%"
-              : "N/A"
-          }`}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-faint">
+            Matchup Stats
+          </p>
+          <p
+            className={`flex items-baseline gap-3 ${
+              reversed ? "flex-row-reverse" : ""
+            }`}
+          >
+            <span className="text-sm text-muted">Wins</span>
+            <span
+              className={`font-display text-3xl font-bold tabular-nums ${
+                commander ? "text-win" : "text-faint"
+              }`}
+            >
+              {commander ? wins : "—"}
+            </span>
+          </p>
+          <p
+            className={`flex items-baseline gap-3 ${
+              reversed ? "flex-row-reverse" : ""
+            }`}
+          >
+            <span className="text-sm text-muted">Losses</span>
+            <span
+              className={`font-display text-3xl font-bold tabular-nums ${
+                commander ? "text-loss" : "text-faint"
+              }`}
+            >
+              {commander ? losses : "—"}
+            </span>
+          </p>
+          <p
+            className={`flex items-baseline gap-3 ${
+              reversed ? "flex-row-reverse" : ""
+            }`}
+          >
+            <span className="text-sm text-muted">Win Rate</span>
+            <span
+              className={`font-display text-3xl font-bold tabular-nums ${
+                winRate !== null ? "text-[var(--side)]" : "text-faint"
+              }`}
+            >
+              {winRate !== null ? `${winRate.toFixed(1)}%` : "—"}
+            </span>
+          </p>
+          <div className="h-1.5 w-full max-w-[240px] overflow-hidden rounded-full bg-surface-inset">
+            <div
+              className="h-full rounded-full bg-[var(--side)] transition-[width] duration-300"
+              style={{ width: `${winRate ?? 0}%` }}
+            />
+          </div>
         </div>
       </div>
-      <div className="m-5 border">
-        <div className="flex flex-row justify-between m-2">
-          <h4 className="text-2xl">Strategies</h4>
+
+      <div className="flex min-h-0 flex-col gap-3 border-t border-border pt-4">
+        <div className="flex flex-row items-center justify-between">
+          <h4 className="font-display text-lg font-bold uppercase tracking-wide">
+            Strategies
+          </h4>
           <button
-            className={`rounded-full pl-10 pr-10  ${
-              isAddingStrategy
-                ? "cursor-not-allowed bg-mist-300"
-                : "cursor-pointer bg-mist-400 hover:bg-mist-300"
-            }`}
+            className="btn btn-primary"
             onClick={() => (commander ? setIsAddingStrategy(true) : {})}
-            disabled={isAddingStrategy}
+            disabled={isAddingStrategy || !commander}
           >
             Add
           </button>
         </div>
-        <div className="border m-2">
+        <div className="flex flex-col gap-2">
           {isAddingStrategy && commander ? (
             <StrategyInputForm
               player={commander}
@@ -165,6 +226,15 @@ export default function CommanderStatsView({
           ) : (
             ""
           )}
+          {!commander ? (
+            <p className="py-6 text-center text-sm text-faint">
+              Select a commander to view strategies.
+            </p>
+          ) : strategies.length === 0 && !isAddingStrategy ? (
+            <p className="py-6 text-center text-sm text-faint">
+              No strategies yet.
+            </p>
+          ) : null}
           {strategies.map((strat: Strategy) => (
             <StrategyRow key={strat.id} strategy={strat}></StrategyRow>
           ))}

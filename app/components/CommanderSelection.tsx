@@ -9,12 +9,14 @@ type Commander = Tables<"commanders">;
 
 interface CommanderSelectionProps {
   onClick: (c: Commander | null) => void;
+  selected?: Commander | null;
 }
 
-const PORTRAIT_DIAMETER: number = 100;
+const PORTRAIT_SIZE: number = 100;
 
 export default function CommanderSelection({
   onClick,
+  selected,
 }: CommanderSelectionProps) {
   const [commanders, setCommanders] = useState<Commander[]>([]);
 
@@ -33,24 +35,36 @@ export default function CommanderSelection({
   }, []);
 
   return (
-    <div className="flex flex-col ml-5 mr-5 h-full w-fit justify-start overflow-y-auto">
-      <button
-        onClick={() => onClick(null)}
-        className="rounded-full mt-2 bg-mist-300 hover:bg-mist-400 cursor-pointer"
-      >
+    // -m/p bleed: the scroll container clips at its padding box, so rings/glows need this room
+    <div className="-m-1.5 flex shrink-0 gap-3 p-1.5 max-lg:overflow-x-auto lg:w-fit lg:flex-col lg:overflow-y-auto">
+      <button onClick={() => onClick(null)} className="btn btn-ghost shrink-0">
         Clear
       </button>
-      {commanders.map((c: Commander) => (
-        <Image
-          key={c.slug}
-          src={c.portrait_url ? c.portrait_url : ""}
-          width={PORTRAIT_DIAMETER}
-          height={PORTRAIT_DIAMETER}
-          alt={`Portrait of ${c.display_name}`}
-          className="rounded-full my-2"
-          onClick={() => onClick(c)}
-        />
-      ))}
+      {commanders.map((c: Commander) => {
+        const isSelected = selected?.slug === c.slug;
+        return (
+          <button
+            key={c.slug}
+            type="button"
+            onClick={() => onClick(c)}
+            aria-pressed={isSelected}
+            title={c.display_name}
+            className={`shrink-0 cursor-pointer overflow-hidden rounded-xl ring-1 transition duration-150 ${
+              isSelected
+                ? "shadow-glow ring-2 ring-[var(--side)]"
+                : "ring-border hover:shadow-glow-sm hover:ring-[var(--side)]"
+            }`}
+          >
+            <Image
+              src={c.portrait_url ? c.portrait_url : ""}
+              width={PORTRAIT_SIZE}
+              height={PORTRAIT_SIZE}
+              alt={`Portrait of ${c.display_name}`}
+              className="block"
+            />
+          </button>
+        );
+      })}
     </div>
   );
 }

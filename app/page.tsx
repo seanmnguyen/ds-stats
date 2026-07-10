@@ -20,30 +20,40 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <main>
-        <div className="flex flex-row w-dvw justify-between">
-          <div className="flex flex-1/2 flex-row h-dvh max-h-dvh bg-white text-black">
-            <CommanderSelection
-              onClick={handleLeftCommanderClick}
-            ></CommanderSelection>
-            <CommanderStatsView
-              commander={leftCommander}
-              opponent={rightCommander}
-            ></CommanderStatsView>
-          </div>
-          <div className="flex flex-1/2 flex-row-reverse h-dvh max-h-dvh bg-white text-black">
-            <CommanderSelection
-              onClick={handleRightCommanderClick}
-            ></CommanderSelection>
-            <CommanderStatsView
-              commander={rightCommander}
-              opponent={leftCommander}
-              reversed={true}
-            ></CommanderStatsView>
-          </div>
-        </div>
-      </main>
-    </div>
+    <main className="flex w-full flex-1 flex-col lg:h-[calc(100dvh-var(--nav-h))] lg:flex-none lg:flex-row">
+      <section className="side-ally flex min-h-0 flex-1 flex-col gap-4 p-4 lg:flex-row">
+        <CommanderSelection
+          onClick={handleLeftCommanderClick}
+          selected={leftCommander}
+        ></CommanderSelection>
+        <CommanderStatsView
+          commander={leftCommander}
+          opponent={rightCommander}
+        ></CommanderStatsView>
+      </section>
+
+      {/* Divider: horizontal rule on small screens, vertical on large */}
+      <div className="relative mx-4 flex items-center justify-center lg:mx-0 lg:my-6">
+        <div
+          aria-hidden
+          className="absolute inset-x-0 top-1/2 h-px bg-border lg:inset-x-auto lg:inset-y-0 lg:left-1/2 lg:h-auto lg:w-px"
+        />
+        <span className="relative rounded-full border border-border-strong bg-surface px-3 py-1 font-display text-xs font-bold uppercase tracking-widest text-muted">
+          vs
+        </span>
+      </div>
+
+      <section className="side-enemy flex min-h-0 flex-1 flex-col gap-4 p-4 lg:flex-row-reverse">
+        <CommanderSelection
+          onClick={handleRightCommanderClick}
+          selected={rightCommander}
+        ></CommanderSelection>
+        <CommanderStatsView
+          commander={rightCommander}
+          opponent={leftCommander}
+          reversed={true}
+        ></CommanderStatsView>
+      </section>
+    </main>
   );
 }
