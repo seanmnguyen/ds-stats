@@ -55,7 +55,7 @@ export default function SignInWithGoogleButton() {
           </svg>
         </span>
         <span className="grow overflow-hidden text-ellipsis font-medium group-disabled:opacity-[0.38]">
-          Sign In
+          Sign in
         </span>
       </span>
     </button>
