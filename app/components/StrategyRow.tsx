@@ -25,20 +25,16 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
   const [rating, setRating] = useState<number>(strategy.rating ?? 0);
 
   useEffect(() => {
-    if (
-      strategy === null ||
-      strategy === undefined ||
-      strategy.author === null
-    ) {
-      return;
-    }
+    const authorId = strategy.author;
+    if (!authorId) return;
+
     const supabase = createUserLevelClient();
 
     (async () => {
       const { data, error } = await supabase
         .from("public_profiles")
         .select("username")
-        .eq("id", strategy.author)
+        .eq("id", authorId)
         .maybeSingle();
 
       if (error) {
@@ -46,7 +42,7 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
         console.error(postgrestErrorToHttpStatus(error));
         return;
       } else {
-        setAuthor(data?.username);
+        setAuthor(data?.username ?? "");
       }
     })();
   });
@@ -86,13 +82,13 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
           <p className="min-w-0">
             <strong
               className={`font-semibold ${
-                strategy?.title === null || strategy?.title === ""
+                strategy.title === null || strategy.title === ""
                   ? "italic text-faint"
                   : ""
               }`}
             >
-              {strategy?.title !== null && strategy?.title !== ""
-                ? strategy?.title
+              {strategy.title !== null && strategy.title !== ""
+                ? strategy.title
                 : "Untitled"}
             </strong>{" "}
             {author !== "" ? (
@@ -101,16 +97,12 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
               ""
             )}
           </p>
-          {/* <p>Author: {strategy?.author}</p> */}
-          {/* <p className="italic text-right">
-            Created: {formatDate(strategy?.created_at)}
-          </p> */}
           <p className="whitespace-nowrap text-xs italic text-faint">
-            Last Modified: {formatDate(strategy?.last_edit)}
+            Last Modified: {formatDate(strategy.last_edit)}
           </p>
         </div>
         <p className="max-h-24 overflow-y-auto pr-1 text-sm leading-relaxed text-muted">
-          {strategy?.body}
+          {strategy.body}
         </p>
       </div>
       <div className="flex shrink-0 flex-col items-center justify-center">
