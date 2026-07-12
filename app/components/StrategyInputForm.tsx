@@ -1,6 +1,6 @@
 "use client";
 
-import { Tables } from "@/database/database.types";
+import { Tables, TablesInsert } from "@/database/database.types";
 import { postgrestErrorToHttpStatus } from "@/database/utils";
 import { createUserLevelClient } from "@/lib/supabase/client";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -16,15 +16,18 @@ type StrategyFormState = {
 interface StrategyInputFormProps {
   player: Commander;
   opponent?: Commander;
-  handleCancel: () => void;
+  onSuccess: () => Promise<void>;
+  onClose: () => void;
 }
 
 export default function StrategyInputForm({
   player,
   opponent,
-  handleCancel,
+  onSuccess,
+  onClose,
 }: StrategyInputFormProps) {
   const [commanderOptions, setComamnderOptions] = useState<Commander[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [strategyForm, setStrategyForm] = useState<StrategyFormState>(
     createBlankStrategyForm()
   );
@@ -69,8 +72,39 @@ export default function StrategyInputForm({
 
   async function handleStrategySubmit(event: React.SubmitEvent) {
     event.preventDefault();
+    setIsSubmitting(true);
 
     const supabase = createUserLevelClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      console.error("Error 401: Unauthorized");
+      return;
+    }
+
+    const { data: currentProfileId } = await supabase.rpc("current_profile_id");
+    if (!currentProfileId) {
+      console.error("Error 401: Unauthorized. Profile not found.");
+      return;
+    }
+    const newStrategy = {
+      author: currentProfileId,
+      player: player.slug,
+      opponent: strategyForm.opponent,
+      title: strategyForm.title,
+      body: strategyForm.body,
+    } as TablesInsert<"strategies">;
+    const { error } = await supabase.from("strategies").insert(newStrategy);
+
+    if (error) {
+      console.error(postgrestErrorToHttpStatus(error), error);
+      return;
+    }
+
+    await onSuccess();
+    onClose();
   }
 
   return (
@@ -84,12 +118,12 @@ export default function StrategyInputForm({
         </p>
         <p className="font-display uppercase text-faint">vs</p>
         <select
-          value={strategyForm.opponent ?? "defaultSelect"}
+          value={strategyForm.opponent}
           onChange={(e) => handleFormChange("opponent")(e)}
           required
           className="field w-auto py-1"
         >
-          <option value="defaultSelect">Opponent</option>
+          <option value="">Opponent</option>
           {commanderOptions.map((c: Commander) => (
             <option key={c.slug} value={c.slug}>
               {c.display_name}
@@ -112,7 +146,11 @@ export default function StrategyInputForm({
           onChange={handleFormChange("title")}
           className="field"
         />
-        <button type="submit" className="btn btn-primary">
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={isSubmitting}
+        >
           Submit
         </button>
         <label
@@ -132,7 +170,7 @@ export default function StrategyInputForm({
         />
         <button
           type="button"
-          onClick={handleCancel}
+          onClick={onClose}
           className="btn btn-ghost self-start"
         >
           Cancel

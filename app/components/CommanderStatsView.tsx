@@ -27,6 +27,7 @@ export default function CommanderStatsView({
   const [losses, setLosses] = useState<number>(0);
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [isAddingStrategy, setIsAddingStrategy] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   function fetchAllStrategies(player: Commander): Promise<Strategy[]> {
     const supabase = createUserLevelClient();
@@ -34,7 +35,8 @@ export default function CommanderStatsView({
       const { data } = await supabase
         .from("strategies")
         .select("*")
-        .eq("player", player.slug);
+        .eq("player", player.slug)
+        .order("rating", { ascending: false });
 
       return data ? data : [];
     })();
@@ -50,11 +52,35 @@ export default function CommanderStatsView({
         .from("strategies")
         .select("*")
         .eq("player", player.slug)
-        .eq("opponent", opponent.slug);
+        .eq("opponent", opponent.slug)
+        .order("rating", { ascending: false });
 
       return data ? data : [];
     })();
   }
+
+  async function refreshStrategies() {
+    if (!commander) return;
+    const fetched = opponent
+      ? // Get the strategies for just this matchup
+        await fetchStrategy(commander, opponent)
+      : // Get the strategies for all matchups with this commander
+        await fetchAllStrategies(commander);
+    setStrategies(fetched);
+  }
+
+  // Auth check
+  useEffect(() => {
+    const supabase = createUserLevelClient();
+    (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        setIsAuthenticated(true);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     const supabase = createUserLevelClient();
@@ -210,8 +236,8 @@ export default function CommanderStatsView({
           </h4>
           <button
             className="btn btn-primary"
-            onClick={() => (commander ? setIsAddingStrategy(true) : {})}
-            disabled={isAddingStrategy || !commander}
+            onClick={() => setIsAddingStrategy(true)}
+            disabled={!isAuthenticated || isAddingStrategy || !commander}
           >
             Add
           </button>
@@ -221,7 +247,8 @@ export default function CommanderStatsView({
             <StrategyInputForm
               player={commander}
               opponent={opponent ?? undefined}
-              handleCancel={() => setIsAddingStrategy(false)}
+              onSuccess={refreshStrategies}
+              onClose={() => setIsAddingStrategy(false)}
             ></StrategyInputForm>
           ) : (
             ""

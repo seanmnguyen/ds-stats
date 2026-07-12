@@ -91,7 +91,9 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
                   : ""
               }`}
             >
-              {strategy?.title ?? "Untitled"}
+              {strategy?.title !== null && strategy?.title !== ""
+                ? strategy?.title
+                : "Untitled"}
             </strong>{" "}
             {author !== "" ? (
               <em className="text-sm text-muted">{`- ${author}`}</em>
