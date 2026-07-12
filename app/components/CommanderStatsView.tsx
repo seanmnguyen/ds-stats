@@ -28,6 +28,8 @@ export default function CommanderStatsView({
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [isAddingStrategy, setIsAddingStrategy] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
 
   function fetchAllStrategies(player: Commander): Promise<Strategy[]> {
     const supabase = createUserLevelClient();
@@ -68,6 +70,20 @@ export default function CommanderStatsView({
         await fetchAllStrategies(commander);
     setStrategies(fetched);
   }
+
+  // Determine current profile id and admin status
+  useEffect(() => {
+    const supabase = createUserLevelClient();
+
+    (async () => {
+      const { data: currentProfileId } = await supabase.rpc(
+        "current_profile_id"
+      );
+      const { data: isAdmin } = await supabase.rpc("is_admin");
+      setCurrentProfileId(currentProfileId);
+      setIsAdmin(Boolean(isAdmin));
+    })();
+  }, []);
 
   // Auth check
   useEffect(() => {
@@ -263,7 +279,12 @@ export default function CommanderStatsView({
             </p>
           ) : null}
           {strategies.map((strat: Strategy) => (
-            <StrategyRow key={strat.id} strategy={strat}></StrategyRow>
+            <StrategyRow
+              key={strat.id}
+              strategy={strat}
+              isAdmin={isAdmin}
+              currentProfileId={currentProfileId}
+            ></StrategyRow>
           ))}
         </div>
       </div>

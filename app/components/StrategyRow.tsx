@@ -9,6 +9,8 @@ type Strategy = Tables<"strategies">;
 
 interface StrategyRowProps {
   strategy: Strategy;
+  isAdmin: boolean;
+  currentProfileId: number | null;
 }
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -20,10 +22,15 @@ function formatDate(dateStr: string | null | undefined): string {
   });
 }
 
-export default function StrategyRow({ strategy }: StrategyRowProps) {
+export default function StrategyRow({
+  strategy,
+  isAdmin,
+  currentProfileId,
+}: StrategyRowProps) {
   const [author, setAuthor] = useState<string>("");
   const [rating, setRating] = useState<number>(strategy.rating ?? 0);
 
+  // Load the username
   useEffect(() => {
     const authorId = strategy.author;
     if (!authorId) return;
@@ -45,7 +52,7 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
         setAuthor(data?.username ?? "");
       }
     })();
-  });
+  }, [strategy.author]);
   /**
    * Votes on the rating. `isUpvote` of `true` gives an upvote; otherwise, downvote
    */
@@ -78,8 +85,6 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
   return (
     <div className="group panel-inset flex flex-row gap-3 p-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        {/* items-center, not baseline: icon buttons have no text baseline, so
-            baseline alignment would hang the right group off the SVG's bottom edge */}
         <div className="flex flex-row flex-wrap items-center justify-between gap-x-3">
           <p className="min-w-0">
             <strong
@@ -100,7 +105,15 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
             )}
           </p>
           <div className="flex shrink-0 items-center gap-2">
-            <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100">
+            <div
+              className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
+              hidden={
+                !(
+                  isAdmin ||
+                  (currentProfileId && currentProfileId === strategy.author)
+                )
+              }
+            >
               <button
                 aria-label="Edit strategy"
                 className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-surface-raised hover:text-accent"
