@@ -143,10 +143,7 @@
     border: 1px solid transparent;
     padding: 0.4rem 0.875rem;
     cursor: pointer;
-    transition:
-      color 150ms,
-      background-color 150ms,
-      border-color 150ms,
+    transition: color 150ms, background-color 150ms, border-color 150ms,
       box-shadow 150ms;
   }
   .btn:disabled {
@@ -184,9 +181,7 @@
     padding: 0.5rem 0.75rem;
     font-size: 0.875rem;
     color: var(--foreground);
-    transition:
-      border-color 150ms,
-      box-shadow 150ms;
+    transition: border-color 150ms, box-shadow 150ms;
   }
   .field::placeholder {
     color: var(--faint);

@@ -76,9 +76,11 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
   }
 
   return (
-    <div className="panel-inset flex flex-row gap-3 p-3">
+    <div className="group panel-inset flex flex-row gap-3 p-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex flex-row flex-wrap items-baseline justify-between gap-x-3">
+        {/* items-center, not baseline: icon buttons have no text baseline, so
+            baseline alignment would hang the right group off the SVG's bottom edge */}
+        <div className="flex flex-row flex-wrap items-center justify-between gap-x-3">
           <p className="min-w-0">
             <strong
               className={`font-semibold ${
@@ -97,9 +99,47 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
               ""
             )}
           </p>
-          <p className="whitespace-nowrap text-xs italic text-faint">
-            Last Modified: {formatDate(strategy.last_edit)}
-          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100">
+              <button
+                aria-label="Edit strategy"
+                className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-surface-raised hover:text-accent"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M11 3l2 2-8 8-3 1 1-3 8-8z" />
+                </svg>
+              </button>
+              <button
+                aria-label="Delete strategy"
+                className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-surface-raised hover:text-loss"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M2.5 4h11M6 4V2.5h4V4M4 4l.8 9.5h6.4L12 4" />
+                </svg>
+              </button>
+            </div>
+            <p className="whitespace-nowrap text-xs italic text-faint">
+              Last Modified: {formatDate(strategy.last_edit)}
+            </p>
+          </div>
         </div>
         <p className="max-h-24 overflow-y-auto pr-1 text-sm leading-relaxed text-muted">
           {strategy.body}
