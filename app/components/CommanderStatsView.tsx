@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import StrategyRow, { StrategyWithAuthor } from "./StrategyRow";
 import StrategyInputForm, { InputMode } from "./StrategyInputForm";
+import { postgrestErrorToHttpStatus } from "@/database/utils";
 
 type Commander = Tables<"commanders">;
 type Strategy = Tables<"strategies">;
@@ -32,12 +33,16 @@ export default function CommanderStatsView({
   const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
 
-  function fetchAllStrategies(player: Commander): Promise<StrategyWithAuthor[]> {
+  function fetchAllStrategies(
+    player: Commander
+  ): Promise<StrategyWithAuthor[]> {
     const supabase = createUserLevelClient();
     return (async () => {
       const { data } = await supabase
         .from("strategies")
-        .select("*, author_profile:public_profiles!strategies_author_fkey(username)")
+        .select(
+          "*, author_profile:public_profiles!strategies_author_fkey(username)"
+        )
         .eq("player", player.slug)
         .order("rating", { ascending: false });
 
@@ -53,7 +58,9 @@ export default function CommanderStatsView({
     return (async () => {
       const { data } = await supabase
         .from("strategies")
-        .select("*, author_profile:public_profiles!strategies_author_fkey(username)")
+        .select(
+          "*, author_profile:public_profiles!strategies_author_fkey(username)"
+        )
         .eq("player", player.slug)
         .eq("opponent", opponent.slug)
         .order("rating", { ascending: false });
@@ -78,6 +85,27 @@ export default function CommanderStatsView({
     setStrategies((prev) =>
       prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))
     );
+  }
+
+  async function deleteStrategy(strategy: Strategy) {
+    const supabase = createUserLevelClient();
+
+    const { error } = await supabase
+      .from("strategies")
+      .delete()
+      .eq("id", strategy.id);
+
+    if (error) {
+      console.error(
+        `Error deleting strategy ${strategy.id} ${
+          strategy.title
+        }: ${postgrestErrorToHttpStatus(error)}, ${error}`
+      );
+      return;
+    }
+
+    // Remove this strategy from the displayed list
+    setStrategies((prev) => prev.filter((s) => s.id !== strategy.id));
   }
 
   // Determine current profile id and admin status
@@ -307,6 +335,7 @@ export default function CommanderStatsView({
                   isAdmin={isAdmin}
                   currentProfileId={currentProfileId}
                   onEdit={(s) => setEditingStrategy(s)}
+                  onDelete={(s) => deleteStrategy(s)}
                 ></StrategyRow>
               )
             )}
