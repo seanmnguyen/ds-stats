@@ -4,8 +4,8 @@ import { Tables } from "@/database/database.types";
 import { createUserLevelClient } from "@/lib/supabase/client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import StrategyRow from "./StrategyRow";
-import StrategyInputForm from "./StrategyInputForm";
+import StrategyRow, { StrategyWithAuthor } from "./StrategyRow";
+import StrategyInputForm, { InputMode } from "./StrategyInputForm";
 
 type Commander = Tables<"commanders">;
 type Strategy = Tables<"strategies">;
@@ -25,18 +25,19 @@ export default function CommanderStatsView({
 }: CommanderStatsViewProps) {
   const [wins, setWins] = useState<number>(0);
   const [losses, setLosses] = useState<number>(0);
-  const [strategies, setStrategies] = useState<Strategy[]>([]);
+  const [strategies, setStrategies] = useState<StrategyWithAuthor[]>([]);
   const [isAddingStrategy, setIsAddingStrategy] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
+  const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
 
-  function fetchAllStrategies(player: Commander): Promise<Strategy[]> {
+  function fetchAllStrategies(player: Commander): Promise<StrategyWithAuthor[]> {
     const supabase = createUserLevelClient();
     return (async () => {
       const { data } = await supabase
         .from("strategies")
-        .select("*")
+        .select("*, author_profile:public_profiles!strategies_author_fkey(username)")
         .eq("player", player.slug)
         .order("rating", { ascending: false });
 
@@ -47,12 +48,12 @@ export default function CommanderStatsView({
   function fetchStrategy(
     player: Commander,
     opponent: Commander
-  ): Promise<Strategy[]> {
+  ): Promise<StrategyWithAuthor[]> {
     const supabase = createUserLevelClient();
     return (async () => {
       const { data } = await supabase
         .from("strategies")
-        .select("*")
+        .select("*, author_profile:public_profiles!strategies_author_fkey(username)")
         .eq("player", player.slug)
         .eq("opponent", opponent.slug)
         .order("rating", { ascending: false });
@@ -69,6 +70,14 @@ export default function CommanderStatsView({
       : // Get the strategies for all matchups with this commander
         await fetchAllStrategies(commander);
     setStrategies(fetched);
+  }
+
+  // Replace a single strategy in place after an edit. The update returns a plain
+  // row (no embedded author), so merge it over the existing one to keep the author.
+  function patchStrategy(updated: Strategy) {
+    setStrategies((prev) =>
+      prev.map((s) => (s.id === updated.id ? { ...s, ...updated } : s))
+    );
   }
 
   // Determine current profile id and admin status
@@ -263,6 +272,7 @@ export default function CommanderStatsView({
             <StrategyInputForm
               player={commander}
               opponent={opponent ?? undefined}
+              mode={InputMode.ADD}
               onSuccess={refreshStrategies}
               onClose={() => setIsAddingStrategy(false)}
             ></StrategyInputForm>
@@ -278,14 +288,28 @@ export default function CommanderStatsView({
               No strategies yet.
             </p>
           ) : null}
-          {strategies.map((strat: Strategy) => (
-            <StrategyRow
-              key={strat.id}
-              strategy={strat}
-              isAdmin={isAdmin}
-              currentProfileId={currentProfileId}
-            ></StrategyRow>
-          ))}
+          {commander &&
+            strategies.map((strat) =>
+              editingStrategy?.id === strat.id ? (
+                <StrategyInputForm
+                  key={strat.id}
+                  player={commander}
+                  opponent={opponent ?? undefined}
+                  mode={InputMode.EDIT}
+                  strategy={strat}
+                  onSuccess={patchStrategy}
+                  onClose={() => setEditingStrategy(null)}
+                ></StrategyInputForm>
+              ) : (
+                <StrategyRow
+                  key={strat.id}
+                  strategy={strat}
+                  isAdmin={isAdmin}
+                  currentProfileId={currentProfileId}
+                  onEdit={(s) => setEditingStrategy(s)}
+                ></StrategyRow>
+              )
+            )}
         </div>
       </div>
     </div>

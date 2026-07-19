@@ -6,6 +6,7 @@ import { createUserLevelClient } from "@/lib/supabase/client";
 import { ChangeEvent, useEffect, useState } from "react";
 
 type Commander = Tables<"commanders">;
+type Strategy = Tables<"strategies">;
 
 type StrategyFormState = {
   title: string;
@@ -16,27 +17,36 @@ type StrategyFormState = {
 interface StrategyInputFormProps {
   player: Commander;
   opponent?: Commander;
-  onSuccess: () => Promise<void>;
+  mode: InputMode;
+  strategy?: Strategy;
+  onSuccess: (strategy: Strategy) => void | Promise<void>;
   onClose: () => void;
+}
+
+export enum InputMode {
+  ADD = "add",
+  EDIT = "edit",
 }
 
 export default function StrategyInputForm({
   player,
   opponent,
+  mode,
+  strategy,
   onSuccess,
   onClose,
 }: StrategyInputFormProps) {
   const [commanderOptions, setComamnderOptions] = useState<Commander[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [strategyForm, setStrategyForm] = useState<StrategyFormState>(
-    createBlankStrategyForm()
+    createStartingStrategyForm()
   );
 
-  function createBlankStrategyForm() {
+  function createStartingStrategyForm() {
     return {
-      title: "",
-      body: "",
-      opponent: opponent?.slug ?? "",
+      title: strategy?.title ?? "",
+      body: strategy?.body ?? "",
+      opponent: opponent?.slug ?? strategy?.opponent ?? "",
     };
   }
 
@@ -70,7 +80,7 @@ export default function StrategyInputForm({
     };
   }
 
-  async function handleStrategySubmit(event: React.SubmitEvent) {
+  async function handleStrategyCreate(event: React.SubmitEvent) {
     event.preventDefault();
     setIsSubmitting(true);
 
@@ -81,12 +91,14 @@ export default function StrategyInputForm({
     } = await supabase.auth.getUser();
     if (!user) {
       console.error("Error 401: Unauthorized");
+      setIsSubmitting(false);
       return;
     }
 
     const { data: currentProfileId } = await supabase.rpc("current_profile_id");
     if (!currentProfileId) {
       console.error("Error 401: Unauthorized. Profile not found.");
+      setIsSubmitting(false);
       return;
     }
     const newStrategy = {
@@ -96,40 +108,90 @@ export default function StrategyInputForm({
       title: strategyForm.title,
       body: strategyForm.body,
     } as TablesInsert<"strategies">;
-    const { error } = await supabase.from("strategies").insert(newStrategy);
+    const { data: created, error } = await supabase
+      .from("strategies")
+      .insert(newStrategy)
+      .select()
+      .single();
 
-    if (error) {
+    if (error || !created) {
       console.error(postgrestErrorToHttpStatus(error), error);
+      setIsSubmitting(false);
       return;
     }
 
-    await onSuccess();
+    await onSuccess(created);
     onClose();
   }
+
+  async function handleStrategyUpdate(event: React.SubmitEvent) {
+    event.preventDefault();
+    setIsSubmitting(true);
+
+    if (!strategy) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    const supabase = createUserLevelClient();
+
+    const { data: updated, error } = await supabase
+      .from("strategies")
+      .update({ title: strategyForm.title, body: strategyForm.body })
+      .eq("id", strategy.id)
+      .select()
+      .single();
+
+    if (error || !updated) {
+      console.error(
+        `Error updating strategy ${strategy.id} ${strategy.title}:`,
+        postgrestErrorToHttpStatus(error),
+        error
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    await onSuccess(updated);
+    onClose();
+  }
+
+  // Opponent display name is derived from the loaded commanders using the slug.
+  const editOpponentName =
+    commanderOptions.find((c) => c.slug === strategy?.opponent)?.display_name ??
+    "";
 
   return (
     <form
       className="panel-inset flex flex-col gap-3 border-accent-deep p-4"
-      onSubmit={handleStrategySubmit}
+      onSubmit={
+        mode === InputMode.ADD ? handleStrategyCreate : handleStrategyUpdate
+      }
     >
       <div className="flex flex-row items-center justify-center gap-2 text-center">
         <p className="font-display font-semibold uppercase tracking-wide">
           {player.display_name}
         </p>
         <p className="font-display uppercase text-faint">vs</p>
-        <select
-          value={strategyForm.opponent}
-          onChange={(e) => handleFormChange("opponent")(e)}
-          required
-          className="field w-auto py-1"
-        >
-          <option value="">Opponent</option>
-          {commanderOptions.map((c: Commander) => (
-            <option key={c.slug} value={c.slug}>
-              {c.display_name}
-            </option>
-          ))}
-        </select>
+        {mode === InputMode.ADD ? (
+          <select
+            value={strategyForm.opponent}
+            onChange={(e) => handleFormChange("opponent")(e)}
+            required
+            className="field w-auto py-1"
+          >
+            <option value="">Opponent</option>
+            {commanderOptions.map((c: Commander) => (
+              <option key={c.slug} value={c.slug}>
+                {c.display_name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <p className="font-display font-semibold uppercase tracking-wide">
+            {opponent?.display_name ?? editOpponentName}
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3">
         <label

@@ -3,14 +3,20 @@
 import { Tables } from "@/database/database.types";
 import { postgrestErrorToHttpStatus } from "@/database/utils";
 import { createUserLevelClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type Strategy = Tables<"strategies">;
 
+// A strategy row plus its author's username, embedded via the author FK.
+export type StrategyWithAuthor = Strategy & {
+  author_profile: { username: string | null } | null;
+};
+
 interface StrategyRowProps {
-  strategy: Strategy;
+  strategy: StrategyWithAuthor;
   isAdmin: boolean;
   currentProfileId: number | null;
+  onEdit: (strategy: Strategy) => void;
 }
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -26,33 +32,13 @@ export default function StrategyRow({
   strategy,
   isAdmin,
   currentProfileId,
+  onEdit,
 }: StrategyRowProps) {
-  const [author, setAuthor] = useState<string>("");
   const [rating, setRating] = useState<number>(strategy.rating ?? 0);
 
-  // Load the username
-  useEffect(() => {
-    const authorId = strategy.author;
-    if (!authorId) return;
+  // Author username arrives embedded with the strategy from the parent query
+  const authorName = strategy.author_profile?.username ?? "";
 
-    const supabase = createUserLevelClient();
-
-    (async () => {
-      const { data, error } = await supabase
-        .from("public_profiles")
-        .select("username")
-        .eq("id", authorId)
-        .maybeSingle();
-
-      if (error) {
-        console.error(error);
-        console.error(postgrestErrorToHttpStatus(error));
-        return;
-      } else {
-        setAuthor(data?.username ?? "");
-      }
-    })();
-  }, [strategy.author]);
   /**
    * Votes on the rating. `isUpvote` of `true` gives an upvote; otherwise, downvote
    */
@@ -82,6 +68,11 @@ export default function StrategyRow({
     })();
   }
 
+  // Author (or an admin) may edit/delete this strategy
+  const canModify =
+    isAdmin ||
+    (currentProfileId !== null && currentProfileId === strategy.author);
+
   return (
     <div className="group panel-inset flex flex-row gap-3 p-3">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -98,8 +89,8 @@ export default function StrategyRow({
                 ? strategy.title
                 : "Untitled"}
             </strong>{" "}
-            {author !== "" ? (
-              <em className="text-sm text-muted">{`- ${author}`}</em>
+            {authorName !== "" ? (
+              <em className="text-sm text-muted">{`- ${authorName}`}</em>
             ) : (
               ""
             )}
@@ -107,16 +98,12 @@ export default function StrategyRow({
           <div className="flex shrink-0 items-center gap-2">
             <div
               className="flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-100"
-              hidden={
-                !(
-                  isAdmin ||
-                  (currentProfileId && currentProfileId === strategy.author)
-                )
-              }
+              hidden={!canModify}
             >
               <button
                 aria-label="Edit strategy"
                 className="cursor-pointer rounded-md p-1 text-muted transition hover:bg-surface-raised hover:text-accent"
+                onClick={() => onEdit(strategy)}
               >
                 <svg
                   width="16"
