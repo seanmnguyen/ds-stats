@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MatchupCommanderSelection from "../components/matchup/MatchupCommanderSelection";
 import MatchupCarousel from "../components/matchup/MatchupCarousel";
 import CommanderStatsView from "../components/CommanderStatsView";
@@ -16,6 +16,11 @@ export default function Matchup() {
   const [rightCommanders, setRightCommanders] = useState<Commander[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
+  const [statsVersion, setStatsVersion] = useState<number>(0);
+  const [pendingAction, setPendingAction] = useState<"clear" | "submit" | null>(
+    null
+  );
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
 
   // Pairwise matchups run 1-to-1. Pad to the longer side
   const matchupCount = Math.max(leftCommanders.length, rightCommanders.length);
@@ -36,14 +41,27 @@ export default function Matchup() {
     })();
   }, []);
 
+  // Move focus to Cancel whenever a confirmation prompt opens
+  useEffect(() => {
+    if (pendingAction) {
+      cancelButtonRef.current?.focus();
+    }
+  }, [pendingAction]);
+
   function handleClearAll() {
     setLeftCommanders([]);
     setRightCommanders([]);
   }
 
   async function handleSubmitResults() {
-    const supabase = createUserLevelClient();
+    if (
+      matchupCount === 0 ||
+      leftCommanders.length !== rightCommanders.length ||
+      currentProfileId === null
+    )
+      return false;
 
+    const supabase = createUserLevelClient();
     const matchupResults: MatchInsert[] = leftCommanders.map(
       (c: Commander, i: number) => {
         return {
@@ -61,7 +79,20 @@ export default function Matchup() {
           error
         )}, ${error}`
       );
+      return false;
     }
+
+    setStatsVersion((v) => v + 1);
+    return true;
+  }
+
+  function confirmPendingAction() {
+    if (pendingAction === "clear") {
+      handleClearAll();
+    } else if (pendingAction === "submit") {
+      handleSubmitResults();
+    }
+    setPendingAction(null);
   }
 
   return (
@@ -102,6 +133,7 @@ export default function Matchup() {
                   commander={selectedLeft}
                   opponent={selectedRight}
                   reversed={false}
+                  version={statsVersion}
                 />
               </div>
 
@@ -118,61 +150,92 @@ export default function Matchup() {
                   commander={selectedRight}
                   opponent={selectedLeft}
                   reversed={true}
+                  version={statsVersion}
                 />
               </div>
             </div>
           </MatchupCarousel>
         )}
 
-        <div className="flex shrink-0 items-center justify-center gap-3 border-t border-border pt-4">
-          <button
-            type="button"
-            className="btn btn-ghost"
-            onClick={handleClearAll}
-            disabled={
-              leftCommanders.length === 0 && rightCommanders.length === 0
-            }
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
+        {pendingAction ? (
+          <div className="flex shrink-0 flex-col items-center justify-center gap-3 border-t border-border pt-4 sm:flex-row">
+            <span className="text-center text-sm text-muted">
+              {pendingAction === "clear"
+                ? "Clear all selected commanders?"
+                : `Submit ${leftCommanders.length} matchup result${
+                    leftCommanders.length === 1 ? "" : "s"
+                  }?`}
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                ref={cancelButtonRef}
+                className="btn btn-ghost"
+                onClick={() => setPendingAction(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={confirmPendingAction}
+              >
+                {pendingAction === "clear" ? "Clear All" : "Submit"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex shrink-0 items-center justify-center gap-3 border-t border-border pt-4">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => setPendingAction("clear")}
+              disabled={
+                leftCommanders.length === 0 && rightCommanders.length === 0
+              }
             >
-              <path d="M2.5 4h11M6 4V2.5h4V4M4 4l.8 9.5h6.4L12 4" />
-            </svg>
-            Clear All
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleSubmitResults}
-            disabled={
-              matchupCount === 0 ||
-              leftCommanders.length !== rightCommanders.length
-            }
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M2.5 4h11M6 4V2.5h4V4M4 4l.8 9.5h6.4L12 4" />
+              </svg>
+              Clear All
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => setPendingAction("submit")}
+              disabled={
+                matchupCount === 0 ||
+                leftCommanders.length !== rightCommanders.length ||
+                currentProfileId === null
+              }
             >
-              <path d="M3 8.5l3 3 7-7" />
-            </svg>
-            Submit Results
-          </button>
-        </div>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M3 8.5l3 3 7-7" />
+              </svg>
+              Submit Results
+            </button>
+          </div>
+        )}
       </section>
 
       <section className="side-enemy flex min-h-0 flex-1 flex-col gap-4 p-4">

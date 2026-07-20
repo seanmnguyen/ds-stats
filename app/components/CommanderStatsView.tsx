@@ -12,6 +12,7 @@ interface CommanderStatsViewProps {
   commander: Commander | null;
   opponent?: Commander | null;
   reversed?: boolean;
+  version?: number;
 }
 
 const PORTRAIT_SIZE: number = 300;
@@ -20,6 +21,7 @@ export default function CommanderStatsView({
   commander,
   opponent,
   reversed,
+  version = 0,
 }: CommanderStatsViewProps) {
   const [wins, setWins] = useState<number>(0);
   const [losses, setLosses] = useState<number>(0);
@@ -65,7 +67,7 @@ export default function CommanderStatsView({
         }
       })();
     }
-  }, [commander, opponent]);
+  }, [commander, opponent, version]);
 
   return (
     <div className="panel flex min-h-0 flex-1 flex-col gap-4 p-5">
