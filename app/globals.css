@@ -191,4 +191,18 @@
     border-color: var(--accent-deep);
     box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 15%, transparent);
   }
+
+  /* Subtle fade for swapped content (e.g. matchup carousel slides) */
+  .animate-fade-in {
+    animation: fade-in 180ms ease-out;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
