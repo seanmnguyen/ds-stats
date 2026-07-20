@@ -66,7 +66,7 @@ export default function MatchupCarousel({
           onClick={() => go(-1)}
         />
         {/* Keying on index remounts the slide so it fades in on each change */}
-        <div key={index} className="animate-fade-in min-h-0 flex-1">
+        <div key={index} className="animate-fade-in flex min-h-0 flex-1 flex-col">
           {children}
         </div>
         <CarouselArrow

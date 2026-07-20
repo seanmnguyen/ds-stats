@@ -68,7 +68,7 @@ export default function CommanderStatsView({
   }, [commander, opponent]);
 
   return (
-    <div className="panel flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+    <div className="panel flex min-h-0 flex-1 flex-col gap-4 p-5">
       <h3
         className={`border-b border-border pb-3 text-center font-display text-2xl font-bold uppercase tracking-wide ${
           commander ? "" : "text-faint"

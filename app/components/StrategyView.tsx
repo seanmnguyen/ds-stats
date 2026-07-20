@@ -142,7 +142,7 @@ export default function StrategyView({
   }, []);
 
   return (
-    <div className="flex min-h-0 flex-col gap-3 border-t border-border pt-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 border-t border-border pt-4">
       <div className="flex flex-row items-center justify-between">
         <h4 className="font-display text-lg font-bold uppercase tracking-wide">
           Strategies
@@ -155,7 +155,7 @@ export default function StrategyView({
           Add
         </button>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         {isAddingStrategy && commander ? (
           <StrategyInputForm
             player={commander}

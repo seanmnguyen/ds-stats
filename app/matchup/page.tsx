@@ -1,26 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MatchupCommanderSelection from "../components/matchup/MatchupCommanderSelection";
 import MatchupCarousel from "../components/matchup/MatchupCarousel";
 import CommanderStatsView from "../components/CommanderStatsView";
-import { Tables } from "@/database/database.types";
+import { Tables, TablesInsert } from "@/database/database.types";
+import { createUserLevelClient } from "@/lib/supabase/client";
+import { postgrestErrorToHttpStatus } from "@/database/utils";
 
 type Commander = Tables<"commanders">;
+type MatchInsert = TablesInsert<"matches">;
 
 export default function Matchup() {
   const [leftCommanders, setLeftCommanders] = useState<Commander[]>([]);
   const [rightCommanders, setRightCommanders] = useState<Commander[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
 
-  // Pairwise matchups run 1-to-1. Pad to the longer side so an unfilled slot
-  // still shows a matchup with an empty panel on the short side.
+  // Pairwise matchups run 1-to-1. Pad to the longer side
   const matchupCount = Math.max(leftCommanders.length, rightCommanders.length);
-  // Clamp during render so a shrinking list (e.g. after Clear) never leaves the
-  // index out of range — no effect needed.
+  // Clamp during render
   const currentMatchup = Math.min(currentIndex, Math.max(0, matchupCount - 1));
   const selectedLeft = leftCommanders[currentMatchup] ?? null;
   const selectedRight = rightCommanders[currentMatchup] ?? null;
+
+  // Determine current profile id and admin status
+  useEffect(() => {
+    const supabase = createUserLevelClient();
+
+    (async () => {
+      const { data: currentProfileId } = await supabase.rpc(
+        "current_profile_id"
+      );
+      setCurrentProfileId(currentProfileId);
+    })();
+  }, []);
+
+  function handleClearAll() {
+    setLeftCommanders([]);
+    setRightCommanders([]);
+  }
+
+  async function handleSubmitResults() {
+    const supabase = createUserLevelClient();
+
+    const matchupResults: MatchInsert[] = leftCommanders.map(
+      (c: Commander, i: number) => {
+        return {
+          winner: c.slug,
+          loser: rightCommanders.at(i)?.slug,
+          logged_by: currentProfileId,
+        } as MatchInsert;
+      }
+    );
+
+    const { error } = await supabase.from("matches").insert(matchupResults);
+    if (error) {
+      console.error(
+        `Error inserting match ups for ${leftCommanders} ${rightCommanders}: ${postgrestErrorToHttpStatus(
+          error
+        )}, ${error}`
+      );
+    }
+  }
 
   return (
     <main className="flex w-full flex-1 flex-col lg:h-[calc(100dvh-var(--nav-h))] lg:flex-none lg:flex-row">
@@ -54,8 +96,8 @@ export default function Matchup() {
             index={currentMatchup}
             onIndexChange={setCurrentIndex}
           >
-            <div className="relative flex flex-row items-start justify-center gap-4">
-              <div className="side-ally flex flex-1 flex-col gap-3">
+            <div className="relative flex min-h-0 flex-1 flex-row items-stretch justify-center gap-4">
+              <div className="side-ally flex min-h-0 flex-1 flex-col gap-3">
                 <CommanderStatsView
                   commander={selectedLeft}
                   opponent={selectedRight}
@@ -71,7 +113,7 @@ export default function Matchup() {
                 vs
               </span>
 
-              <div className="side-enemy flex flex-1 flex-col gap-3">
+              <div className="side-enemy flex min-h-0 flex-1 flex-col gap-3">
                 <CommanderStatsView
                   commander={selectedRight}
                   opponent={selectedLeft}
@@ -81,6 +123,56 @@ export default function Matchup() {
             </div>
           </MatchupCarousel>
         )}
+
+        <div className="flex shrink-0 items-center justify-center gap-3 border-t border-border pt-4">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={handleClearAll}
+            disabled={
+              leftCommanders.length === 0 && rightCommanders.length === 0
+            }
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M2.5 4h11M6 4V2.5h4V4M4 4l.8 9.5h6.4L12 4" />
+            </svg>
+            Clear All
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={handleSubmitResults}
+            disabled={
+              matchupCount === 0 ||
+              leftCommanders.length !== rightCommanders.length
+            }
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M3 8.5l3 3 7-7" />
+            </svg>
+            Submit Results
+          </button>
+        </div>
       </section>
 
       <section className="side-enemy flex min-h-0 flex-1 flex-col gap-4 p-4">
