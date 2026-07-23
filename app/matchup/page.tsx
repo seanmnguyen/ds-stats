@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { SetStateAction, useEffect, useRef, useState } from "react";
 import MatchupCommanderSelection from "../components/matchup/MatchupCommanderSelection";
 import MatchupCarousel from "../components/matchup/MatchupCarousel";
 import CommanderStatsView from "../components/CommanderStatsView";
@@ -95,6 +95,25 @@ export default function Matchup() {
     setPendingAction(null);
   }
 
+  function onRemoveHandler(
+    setter: (value: SetStateAction<Commander[]>) => void
+  ): (index: number) => void {
+    return (index: number) => {
+      setter((prev) => prev.filter((_, i) => i !== index));
+      setCurrentIndex((i: number) => (index < i ? i - 1 : i));
+    };
+  }
+
+  function onChangeAtHandler(
+    setter: (value: SetStateAction<Commander[]>) => void
+  ): (index: number, newCommander: Commander) => void {
+    return (index: number, newCommander: Commander) => {
+      setter((prev) =>
+        prev.map((c: Commander, i: number) => (i === index ? newCommander : c))
+      );
+    };
+  }
+
   return (
     <main className="flex w-full flex-1 flex-col lg:h-[calc(100dvh-var(--nav-h))] lg:flex-none lg:flex-row">
       <section className="side-ally flex min-h-0 flex-1 flex-col gap-4 p-4">
@@ -106,6 +125,8 @@ export default function Matchup() {
           activeIndex={currentMatchup}
           onAdd={(c) => setLeftCommanders((prev) => [...prev, c])}
           onClear={() => setLeftCommanders([])}
+          onRemove={onRemoveHandler(setLeftCommanders)}
+          onChangeAt={onChangeAtHandler(setLeftCommanders)}
           onSelectIndex={setCurrentIndex}
         />
       </section>
@@ -247,6 +268,8 @@ export default function Matchup() {
           activeIndex={currentMatchup}
           onAdd={(c) => setRightCommanders((prev) => [...prev, c])}
           onClear={() => setRightCommanders([])}
+          onRemove={onRemoveHandler(setRightCommanders)}
+          onChangeAt={onChangeAtHandler(setRightCommanders)}
           onSelectIndex={setCurrentIndex}
         />
       </section>

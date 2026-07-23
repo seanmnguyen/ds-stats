@@ -12,6 +12,8 @@ interface MatchupCommanderSelectionProps {
   activeIndex: number;
   onAdd: (c: Commander) => void;
   onClear: () => void;
+  onRemove: (index: number) => void;
+  onChangeAt: (index: number, c: Commander) => void;
   onSelectIndex: (index: number) => void;
 }
 
@@ -22,6 +24,8 @@ export default function MatchupCommanderSelection({
   activeIndex,
   onAdd,
   onClear,
+  onRemove,
+  onChangeAt,
   onSelectIndex,
 }: MatchupCommanderSelectionProps) {
   const [commanderOptions, setComamnderOptions] = useState<Commander[]>([]);
