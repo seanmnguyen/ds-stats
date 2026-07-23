@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Rajdhani } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
+import { ToastProvider } from "./components/Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,8 +37,10 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${rajdhani.variable} antialiased`}
     >
       <body className="flex min-h-dvh flex-col">
-        <Navbar></Navbar>
-        {children}
+        <ToastProvider>
+          <Navbar></Navbar>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

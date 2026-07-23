@@ -6,7 +6,8 @@ import MatchupCarousel from "../components/matchup/MatchupCarousel";
 import CommanderStatsView from "../components/CommanderStatsView";
 import { Tables, TablesInsert } from "@/database/database.types";
 import { createUserLevelClient } from "@/lib/supabase/client";
-import { postgrestErrorToHttpStatus } from "@/database/utils";
+import { errorToUserMessage, postgrestErrorToHttpStatus } from "@/database/utils";
+import { useToast } from "../components/Toast";
 
 type Commander = Tables<"commanders">;
 type MatchInsert = TablesInsert<"matches">;
@@ -21,6 +22,7 @@ export default function Matchup() {
     null
   );
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
+  const toast = useToast();
 
   // Pairwise matchups run 1-to-1. Pad to the longer side
   const matchupCount = Math.max(leftCommanders.length, rightCommanders.length);
@@ -79,10 +81,16 @@ export default function Matchup() {
           error
         )}, ${error}`
       );
+      toast.error(errorToUserMessage(error));
       return false;
     }
 
     setStatsVersion((v) => v + 1);
+    toast.success(
+      `Recorded ${matchupResults.length} matchup result${
+        matchupResults.length === 1 ? "" : "s"
+      }.`
+    );
     return true;
   }
 

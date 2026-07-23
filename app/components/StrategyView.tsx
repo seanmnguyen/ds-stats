@@ -5,7 +5,8 @@ import StrategyInputForm, { InputMode } from "./StrategyInputForm";
 import StrategyRow, { StrategyWithAuthor } from "./StrategyRow";
 import { createUserLevelClient } from "@/lib/supabase/client";
 import { Tables } from "@/database/database.types";
-import { postgrestErrorToHttpStatus } from "@/database/utils";
+import { errorToUserMessage, postgrestErrorToHttpStatus } from "@/database/utils";
+import { useToast } from "./Toast";
 
 type Commander = Tables<"commanders">;
 type Strategy = Tables<"strategies">;
@@ -61,6 +62,7 @@ export default function StrategyView({
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [currentProfileId, setCurrentProfileId] = useState<number | null>(null);
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
+  const toast = useToast();
 
   async function refreshStrategies() {
     if (!commander) return;
@@ -120,6 +122,7 @@ export default function StrategyView({
           strategy.title
         }: ${postgrestErrorToHttpStatus(error)}, ${error}`
       );
+      toast.error(errorToUserMessage(error));
       return;
     }
 

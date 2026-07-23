@@ -1,9 +1,10 @@
 "use client";
 
 import { Tables } from "@/database/database.types";
-import { postgrestErrorToHttpStatus } from "@/database/utils";
+import { errorToUserMessage, postgrestErrorToHttpStatus } from "@/database/utils";
 import { createUserLevelClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { useToast } from "./Toast";
 
 type Strategy = Tables<"strategies">;
 
@@ -38,6 +39,7 @@ export default function StrategyRow({
 }: StrategyRowProps) {
   const [rating, setRating] = useState<number>(strategy.rating ?? 0);
   const [confirmingDelete, setConfirmingDelete] = useState<boolean>(false);
+  const toast = useToast();
 
   // Author username arrives embedded with the strategy from the parent query
   const authorName = strategy.author_profile?.username ?? "";
@@ -56,6 +58,7 @@ export default function StrategyRow({
 
       if (error) {
         console.error(postgrestErrorToHttpStatus(error));
+        toast.error(errorToUserMessage(error));
         return;
       }
 

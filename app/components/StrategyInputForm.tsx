@@ -1,9 +1,10 @@
 "use client";
 
 import { Tables, TablesInsert } from "@/database/database.types";
-import { postgrestErrorToHttpStatus } from "@/database/utils";
+import { errorToUserMessage, postgrestErrorToHttpStatus } from "@/database/utils";
 import { createUserLevelClient } from "@/lib/supabase/client";
 import { ChangeEvent, useEffect, useState } from "react";
+import { useToast } from "./Toast";
 
 type Commander = Tables<"commanders">;
 type Strategy = Tables<"strategies">;
@@ -41,6 +42,8 @@ export default function StrategyInputForm({
   const [strategyForm, setStrategyForm] = useState<StrategyFormState>(
     createStartingStrategyForm()
   );
+  const [formError, setFormError] = useState<string | null>(null);
+  const toast = useToast();
 
   function createStartingStrategyForm() {
     return {
@@ -83,6 +86,7 @@ export default function StrategyInputForm({
   async function handleStrategyCreate(event: React.SubmitEvent) {
     event.preventDefault();
     setIsSubmitting(true);
+    setFormError(null);
 
     const supabase = createUserLevelClient();
 
@@ -91,6 +95,7 @@ export default function StrategyInputForm({
     } = await supabase.auth.getUser();
     if (!user) {
       console.error("Error 401: Unauthorized");
+      setFormError("You need to be signed in to add a strategy.");
       setIsSubmitting(false);
       return;
     }
@@ -98,6 +103,7 @@ export default function StrategyInputForm({
     const { data: currentProfileId } = await supabase.rpc("current_profile_id");
     if (!currentProfileId) {
       console.error("Error 401: Unauthorized. Profile not found.");
+      setFormError("You need to be signed in to add a strategy.");
       setIsSubmitting(false);
       return;
     }
@@ -116,10 +122,12 @@ export default function StrategyInputForm({
 
     if (error || !created) {
       console.error(postgrestErrorToHttpStatus(error), error);
+      setFormError(errorToUserMessage(error));
       setIsSubmitting(false);
       return;
     }
 
+    toast.success("Strategy added.");
     await onSuccess(created);
     onClose();
   }
@@ -127,6 +135,7 @@ export default function StrategyInputForm({
   async function handleStrategyUpdate(event: React.SubmitEvent) {
     event.preventDefault();
     setIsSubmitting(true);
+    setFormError(null);
 
     if (!strategy) {
       setIsSubmitting(false);
@@ -148,10 +157,12 @@ export default function StrategyInputForm({
         postgrestErrorToHttpStatus(error),
         error
       );
+      setFormError(errorToUserMessage(error));
       setIsSubmitting(false);
       return;
     }
 
+    toast.success("Strategy updated.");
     await onSuccess(updated);
     onClose();
   }
@@ -193,6 +204,11 @@ export default function StrategyInputForm({
           </p>
         )}
       </div>
+      {formError && (
+        <p role="alert" className="text-sm text-loss">
+          {formError}
+        </p>
+      )}
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-3">
         <label
           htmlFor="title"

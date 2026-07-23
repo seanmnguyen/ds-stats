@@ -33,6 +33,31 @@ export function postgrestErrorToHttpStatus(error: PostgrestError): number {
 }
 
 /**
+ * Maps a PostgrestError to a friendly, user-facing message. Keep the raw error
+ * for `console.error`; show the return of this to users.
+ * @param error
+ * @returns string
+ */
+export function errorToUserMessage(
+  error: PostgrestError | null | undefined
+): string {
+  if (!error) return "Something went wrong. Please try again.";
+
+  switch (postgrestErrorToHttpStatus(error)) {
+    case 403:
+      return "You don't have permission to do that — try signing in again.";
+    case 404:
+      return "That couldn't be found. It may have already been removed.";
+    case 409:
+      return "That conflicts with existing data.";
+    case 400:
+      return "That wasn't valid. Please check your input and try again.";
+    default:
+      return "Something went wrong. Please try again.";
+  }
+}
+
+/**
  * Validate whether an object only contains allowed keys
  * @param obj
  * @param allowedKeys
