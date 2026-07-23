@@ -93,7 +93,7 @@ export default function MatchupCommanderSelection({
   }
 
   const editingCommander =
-    editingIndex !== null ? (selected[editingIndex] ?? null) : null;
+    editingIndex !== null ? selected[editingIndex] ?? null : null;
 
   return (
     <div className="-m-1.5 flex shrink-0 gap-3 p-1.5 max-lg:overflow-x-auto lg:w-fit lg:flex-col lg:items-center lg:self-center lg:overflow-y-auto">
@@ -102,7 +102,10 @@ export default function MatchupCommanderSelection({
           <button
             type="button"
             // Jump the carousel to the matchup this selection belongs to
-            onClick={() => onSelectIndex(i)}
+            onClick={(e) => {
+              onSelectIndex(i);
+              if (e.detail > 0) e.currentTarget.blur();
+            }}
             title={c.display_name}
             className={`block cursor-pointer overflow-hidden rounded-xl ring-1 transition duration-150 hover:shadow-glow-sm hover:ring-[var(--side)] ${
               i === activeIndex
