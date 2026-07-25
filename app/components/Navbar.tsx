@@ -50,13 +50,20 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 flex h-[var(--nav-h)] items-center justify-between gap-4 border-b border-border bg-background/80 px-5 backdrop-blur-md">
-      <div className="flex min-w-0 items-center gap-6">
+    <header className="sticky top-0 z-40 flex h-[var(--nav-h)] items-center justify-between gap-2 border-b border-border bg-background/80 px-4 backdrop-blur-md sm:gap-4 sm:px-5">
+      <div className="flex min-w-0 items-center gap-3 sm:gap-6">
         <Link
           href="/"
-          className="shrink-0 font-display text-lg font-bold uppercase tracking-[0.2em] transition-colors hover:text-accent-strong"
+          aria-label="Direct Strike Stats — home"
+          className="shrink-0 font-display font-bold uppercase tracking-[0.15em] transition-colors hover:text-accent-strong sm:tracking-[0.2em]"
         >
-          Direct Strike <span className="text-accent">Stats</span>
+          {/* Monogram on mobile, full wordmark from sm up (keeps the navbar from overflowing) */}
+          <span className="text-base sm:hidden">
+            DS <span className="text-accent">Stats</span>
+          </span>
+          <span className="hidden text-lg sm:inline">
+            Direct Strike <span className="text-accent">Stats</span>
+          </span>
         </Link>
 
         <nav className="flex items-center gap-1">
@@ -67,7 +74,7 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-lg px-3 py-1.5 font-display text-sm font-semibold uppercase tracking-wide transition-colors ${
+                className={`rounded-lg px-2.5 py-1.5 font-display text-xs font-semibold uppercase tracking-wide transition-colors sm:px-3 sm:text-sm ${
                   active
                     ? "bg-surface text-accent"
                     : "text-muted hover:bg-surface hover:text-foreground"

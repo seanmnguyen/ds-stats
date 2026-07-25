@@ -24,12 +24,14 @@ export default function SignInWithGoogleButton() {
       type="button"
       onClick={handleSignIn}
       disabled={pending}
+      aria-label="Sign in"
       className={baseClasses}
     >
       {/* Material "ink" overlay — tints on hover/active/focus, hidden when disabled */}
       <span className="pointer-events-none absolute inset-0 bg-white opacity-0 transition-opacity duration-[218ms] group-hover:opacity-[0.08] group-focus:opacity-[0.12] group-active:opacity-[0.12] group-disabled:opacity-0!" />
-      <span className="relative flex h-full w-full flex-row flex-nowrap items-center justify-between">
-        <span className="mr-2.5 h-5 w-5 min-w-5 group-disabled:opacity-[0.38]">
+      {/* Icon-only on mobile (Google's approved compact variant); label appears from sm up */}
+      <span className="relative flex h-full w-full flex-row flex-nowrap items-center justify-center sm:justify-between">
+        <span className="h-5 w-5 min-w-5 group-disabled:opacity-[0.38] sm:mr-2.5">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 48 48"
@@ -54,7 +56,7 @@ export default function SignInWithGoogleButton() {
             <path fill="none" d="M0 0h48v48H0z" />
           </svg>
         </span>
-        <span className="grow overflow-hidden text-ellipsis font-medium group-disabled:opacity-[0.38]">
+        <span className="hidden grow overflow-hidden text-ellipsis font-medium group-disabled:opacity-[0.38] sm:inline">
           Sign in
         </span>
       </span>
