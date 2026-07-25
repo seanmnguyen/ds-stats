@@ -156,7 +156,7 @@ export default function Matchup() {
             index={currentMatchup}
             onIndexChange={setCurrentIndex}
           >
-            <div className="relative flex min-h-0 flex-1 flex-row items-stretch justify-center gap-4">
+            <div className="relative flex min-h-0 flex-1 flex-col items-stretch justify-center gap-4 lg:flex-row">
               <div className="side-ally flex min-h-0 flex-1 flex-col gap-3">
                 <CommanderStatsView
                   commander={selectedLeft}

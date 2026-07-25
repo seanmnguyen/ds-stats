@@ -74,12 +74,15 @@ export default function MatchupCommanderSelection({
   }, [editingIndex]);
 
   function handleAdd(event: ChangeEvent<HTMLSelectElement>): void {
+    const select = event.currentTarget;
     const newCommander =
-      commanderOptions.find((c) => c.slug === event.target.value) ?? null;
+      commanderOptions.find((c) => c.slug === select.value) ?? null;
 
     if (!newCommander) return;
 
     onAdd(newCommander);
+    // Drop focus after adding. Blurring lets the arrow keys reach the carousel.
+    select.blur();
   }
 
   function openEditPopup(index: number, trigger: HTMLElement) {
@@ -178,7 +181,14 @@ export default function MatchupCommanderSelection({
               onRemove(index);
               closeEditPopup();
             }}
-            onChangeAt={onChangeAt}
+            onChangeAt={(index, c) => {
+              onChangeAt(index, c);
+              // Mobile: the open popover covers the rail, so close it after a
+              // swap. Desktop keeps it open for quick repeated changes. 64rem = lg.
+              if (!window.matchMedia("(min-width: 64rem)").matches) {
+                closeEditPopup();
+              }
+            }}
           />
         )}
       </div>

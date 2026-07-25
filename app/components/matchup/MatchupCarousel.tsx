@@ -60,10 +60,12 @@ export default function MatchupCarousel({
       className="flex min-h-0 flex-1 flex-col gap-4"
     >
       <div className="flex min-h-0 flex-1 items-stretch gap-2">
+        {/* Side arrows on desktop; on mobile they move to the control bar below */}
         <CarouselArrow
           direction="prev"
           disabled={count <= 1}
           onClick={() => go(-1)}
+          className="max-lg:hidden"
         />
         {/* Keying on index remounts the slide so it fades in on each change */}
         <div key={index} className="animate-fade-in flex min-h-0 flex-1 flex-col">
@@ -73,29 +75,44 @@ export default function MatchupCarousel({
           direction="next"
           disabled={count <= 1}
           onClick={() => go(1)}
+          className="max-lg:hidden"
         />
       </div>
 
-      <div className="flex items-center justify-center gap-4">
-        <div className="flex items-center gap-2">
-          {Array.from({ length: count }).map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              aria-label={`Go to matchup ${i + 1}`}
-              aria-current={i === index}
-              onClick={() => onIndexChange(i)}
-              className={`h-2 w-2 rounded-full transition duration-150 ${
-                i === index
-                  ? "bg-accent"
-                  : "cursor-pointer bg-border-strong hover:bg-faint"
-              }`}
-            />
-          ))}
+      <div className="flex items-center justify-center gap-3 sm:gap-4">
+        <CarouselArrow
+          direction="prev"
+          disabled={count <= 1}
+          onClick={() => go(-1)}
+          className="lg:hidden"
+        />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2">
+            {Array.from({ length: count }).map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                aria-label={`Go to matchup ${i + 1}`}
+                aria-current={i === index}
+                onClick={() => onIndexChange(i)}
+                className={`h-2 w-2 rounded-full transition duration-150 ${
+                  i === index
+                    ? "bg-accent"
+                    : "cursor-pointer bg-border-strong hover:bg-faint"
+                }`}
+              />
+            ))}
+          </div>
+          <span className="font-display text-xs font-bold uppercase tracking-widest tabular-nums text-muted">
+            Matchup {index + 1} of {count}
+          </span>
         </div>
-        <span className="font-display text-xs font-bold uppercase tracking-widest tabular-nums text-muted">
-          Matchup {index + 1} of {count}
-        </span>
+        <CarouselArrow
+          direction="next"
+          disabled={count <= 1}
+          onClick={() => go(1)}
+          className="lg:hidden"
+        />
       </div>
     </div>
   );
@@ -105,10 +122,12 @@ function CarouselArrow({
   direction,
   disabled,
   onClick,
+  className = "",
 }: {
   direction: "prev" | "next";
   disabled: boolean;
   onClick: () => void;
+  className?: string;
 }) {
   const isPrev = direction === "prev";
 
@@ -118,7 +137,7 @@ function CarouselArrow({
       onClick={onClick}
       disabled={disabled}
       aria-label={isPrev ? "Previous matchup" : "Next matchup"}
-      className="btn btn-ghost h-10 w-10 shrink-0 cursor-pointer self-center rounded-full p-0"
+      className={`btn btn-ghost h-10 w-10 shrink-0 cursor-pointer self-center rounded-full p-0 ${className}`}
     >
       <svg
         width="18"
