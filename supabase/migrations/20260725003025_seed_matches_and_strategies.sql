@@ -53,14 +53,14 @@ truncate table public.matches, public.strategies restart identity;
 -- Required : winner, loser (commander slugs)
 -- Optional : played_at (timestamptz; NULL -> now())
 --
--- Duplicate the example rows and replace with your real games. Keep the
--- ::timestamptz cast on the first row's played_at so the column type is inferred
--- correctly; later rows don't need it.
+-- played_at is cast in the SELECT (coalesce(v.played_at::timestamptz, now())),
+-- so every row can be a plain NULL (-> now()) or a quoted date like '2026-01-15';
+-- no per-row cast is needed.
 insert into public.matches (winner, loser, played_at, logged_by)
 select
   v.winner,
   v.loser,
-  coalesce(v.played_at, now()),
+  coalesce(v.played_at::timestamptz, now()),
   (select id from public.profiles where lower(email) = lower('smnguyen745@gmail.com'))
 from (values
   -- winner,       loser,        played_at (NULL = use now())
