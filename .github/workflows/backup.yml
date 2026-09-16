@@ -1,0 +1,61 @@
+# Daily snapshot of the Supabase data into backups/data.json.
+#
+# The request also keeps the project marked active — Supabase pauses free
+# projects after 7 days of inactivity, and running daily leaves margin for the
+# fact that GitHub schedules are best-effort and get delayed under load.
+#
+# Setup: add repository secrets SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY
+# (Settings -> Secrets and variables -> Actions). Both values are already
+# public in the client bundle; the secrets are hygiene, not protection.
+
+name: Backup Supabase data
+
+on:
+  schedule:
+    - cron: "0 9 * * *" # 09:00 UTC / 02:00 PT
+  workflow_dispatch: # adds a "Run workflow" button for manual runs
+
+# Required for the job to push the snapshot commit back to main.
+permissions:
+  contents: write
+
+# A delayed run must never race the next one into the same file.
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Fetch data
+        id: fetch
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: node scripts/backup.mjs
+
+      - name: Commit if changed
+        # Passed through env, not interpolated into the script, so the value
+        # can never be read as shell.
+        env:
+          SUMMARY: ${{ steps.fetch.outputs.summary }}
+        run: |
+          # --porcelain (not `git diff`) so the first run, where the file is
+          # still untracked, counts as a change.
+          if [ -z "$(git status --porcelain backups/data.json)" ]; then
+            echo "No data changes; nothing to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backups/data.json
+          git commit -m "chore(backup): $SUMMARY"
+          git push
