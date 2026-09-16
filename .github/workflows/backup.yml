@@ -54,8 +54,10 @@ jobs:
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Authored as you, so the snapshots carry your name rather than a
+          # bot's. The chore(backup): prefix is what marks them automated.
+          git config user.name "Sean Nguyen"
+          git config user.email "smnguyen745@gmail.com"
           git add backups/data.json
           git commit -m "chore(backup): $SUMMARY"
           git push
